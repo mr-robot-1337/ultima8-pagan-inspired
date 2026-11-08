@@ -1,8 +1,8 @@
-# Ultima VIII: Pagan — The 666 Procedural Realms (Godot 4.7)
+# Ultima VIII: Pagan (Inspired) — The 666 Procedural Realms (Godot 4.7)
 
 An isometric dark-fantasy action-adventure game built for **Godot 4.7**, paying homage to Origin Systems' ***Ultima VIII: Pagan*** (1994), featuring **666 procedurally generated `72x72` outdoor realms**, cut-away Tenebrae stone houses, cobblestone streets, a 3-Lives & potion-restoration system, and Boss battles at **Level 6** & **Level 666**.
 
-![Ultima VIII: Pagan — Gameplay Screenshot](assets/gameplay_screenshot.jpg)
+![Ultima VIII: Pagan (Inspired) — Gameplay Screenshot](assets/gameplay_screenshot.jpg)
 
 ## How to Run
 1. Open **Godot Engine 4.7**.

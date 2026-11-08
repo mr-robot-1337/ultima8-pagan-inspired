@@ -9,6 +9,8 @@ var projectiles: Array = []
 var particles: Array = []
 var barks: Array = []
 var bridge_tiles: Array = []
+var crumbling_coords: Array[Vector2i] = []
+var minimap_tex: ImageTexture = null
 var pentagram_center: Vector3 = Vector3(8.5, 4.5, 1.92)
 
 var renderer: IsoRenderer
@@ -232,6 +234,38 @@ func _load_level(lvl_num: int = 1, keep_progress: bool = false) -> void:
 	obelisk_awakened = false
 	game_won = false
 
+	crumbling_coords.clear()
+	for x in range(LevelData.MAP_W):
+		for y in range(LevelData.MAP_H):
+			var t: Dictionary = tiles[x][y]
+			if int(t["type"]) == LevelData.TileType.CRUMBLING_STONE:
+				crumbling_coords.append(Vector2i(x, y))
+	_rebuild_minimap_texture()
+
+func _rebuild_minimap_texture() -> void:
+	if tiles.is_empty():
+		return
+	var img: Image = Image.create(LevelData.MAP_W, LevelData.MAP_H, false, Image.FORMAT_RGBA8)
+	for x in range(LevelData.MAP_W):
+		for y in range(LevelData.MAP_H):
+			var t: Dictionary = tiles[x][y]
+			var tt: int = int(t["type"])
+			var mc := Color(0.08, 0.16, 0.32)
+			if tt == LevelData.TileType.LAVA:
+				mc = Color(0.78, 0.22, 0.05)
+			elif tt == LevelData.TileType.GRASS_FLOOR:
+				mc = Color(0.18, 0.42, 0.14)
+			elif tt == LevelData.TileType.COBBLE_FLOOR or tt == LevelData.TileType.BRIDGE_RAISED:
+				mc = Color(0.38, 0.30, 0.22)
+			elif tt == LevelData.TileType.PENTAGRAM_FLOOR:
+				mc = Color(0.72, 0.14, 0.18)
+			elif tt == LevelData.TileType.WALL_BLOCK:
+				mc = Color(0.78, 0.82, 0.88)
+			elif tt != LevelData.TileType.WATER and tt != LevelData.TileType.BRIDGE_SUNKEN:
+				mc = Color(0.54, 0.58, 0.66)
+			img.set_pixel(x, y, mc)
+	minimap_tex = ImageTexture.create_from_image(img)
+
 func has_item(item_id: String) -> bool:
 	return inventory.has(item_id)
 
@@ -346,8 +380,8 @@ func _process(delta: float) -> void:
 	menu_anim_t += delta
 	var vp_size := get_viewport_rect().size
 	if in_start_menu:
-		var orbit_x: float = 11.5 + cos(menu_anim_t * 0.32) * 3.8
-		var orbit_y: float = 10.5 + sin(menu_anim_t * 0.32) * 3.8
+		var orbit_x: float = float(LevelData.MAP_W) * 0.5 + cos(menu_anim_t * 0.25) * 8.0
+		var orbit_y: float = float(LevelData.MAP_H) * 0.5 + sin(menu_anim_t * 0.25) * 8.0
 		var orbit_screen: Vector2 = IsoMath.world_to_screen(orbit_x, orbit_y, 2.0)
 		var menu_cam: Vector2 = vp_size * 0.5 - orbit_screen + Vector2(0.0, 20.0)
 		camera_offset = camera_offset.lerp(menu_cam, minf(1.0, delta * 3.5))
@@ -417,24 +451,24 @@ func _update_timers_and_world(delta: float) -> void:
 			var coord: Vector2i = cell
 			tiles[coord.x][coord.y]["type"] = LevelData.TileType.BRIDGE_RAISED
 			tiles[coord.x][coord.y]["z"] = bz
+		if bridge_anim_progress >= 1.0:
+			_rebuild_minimap_texture()
 
 	# Update Crumbling Stones
-	for x in range(LevelData.MAP_W):
-		for y in range(LevelData.MAP_H):
-			var t: Dictionary = tiles[x][y]
-			if t["type"] == LevelData.TileType.CRUMBLING_STONE:
-				if not t["crumbled"] and t["crumble_timer"] > 0.0:
-					t["crumble_timer"] += delta
-					if t["crumble_timer"] >= 0.85:
-						t["crumbled"] = true
-						t["crumble_timer"] = 4.0 # Respawn countdown
-						audio.play("land", 0.1, -4.0)
-						_spawn_burst(Vector3(x + 0.5, y + 0.5, t["base_z"]), Color(0.55, 0.42, 0.35), 10)
-				elif t["crumbled"]:
-					t["crumble_timer"] -= delta
-					if t["crumble_timer"] <= 0.0:
-						t["crumbled"] = false
-						t["crumble_timer"] = 0.0
+	for coord in crumbling_coords:
+		var t: Dictionary = tiles[coord.x][coord.y]
+		if not bool(t["crumbled"]) and float(t["crumble_timer"]) > 0.0:
+			t["crumble_timer"] = float(t["crumble_timer"]) + delta
+			if float(t["crumble_timer"]) >= 0.85:
+				t["crumbled"] = true
+				t["crumble_timer"] = 4.0 # Respawn countdown
+				audio.play("land", 0.1, -4.0)
+				_spawn_burst(Vector3(float(coord.x) + 0.5, float(coord.y) + 0.5, float(t["base_z"])), Color(0.55, 0.42, 0.35), 10)
+		elif bool(t["crumbled"]):
+			t["crumble_timer"] = float(t["crumble_timer"]) - delta
+			if float(t["crumble_timer"]) <= 0.0:
+				t["crumbled"] = false
+				t["crumble_timer"] = 0.0
 
 	# Update floating barks
 	for i in range(barks.size() - 1, -1, -1):
@@ -1264,38 +1298,31 @@ func _draw() -> void:
 			draw_string(font, h_rect.position + Vector2(12, 22 + i * 20), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 13, col)
 
 	# 5b. Sanctum Minimap Gump (Top-Left, toggle with M)
-	if show_minimap and not tiles.is_empty():
-		var mm_rect := Rect2(18, 12, 148, 164)
+	if show_minimap and minimap_tex != null:
+		var mm_rect := Rect2(18, 12, 168, 188)
 		draw_rect(mm_rect, Color(0.06, 0.05, 0.09, 0.88))
 		draw_rect(mm_rect, Color(0.48, 0.35, 0.22, 0.88), false, 1.5)
-		draw_string(font, Vector2(26, 28), "LVL " + str(current_level) + " MAP [M]", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.92, 0.74, 0.32))
-		var cell_s: float = 5.6
+		draw_string(font, Vector2(26, 28), "LVL " + str(current_level) + " MAP (72x72) [M]", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.92, 0.74, 0.32))
+		var map_px: float = 144.0
+		var cell_s: float = map_px / float(LevelData.MAP_W)
 		var ox: float = 30.0
 		var oy: float = 36.0
-		for x in range(LevelData.MAP_W):
-			for y in range(LevelData.MAP_H):
-				var t: Dictionary = tiles[x][y]
-				var tt: int = int(t["type"])
-				var mc := Color(0.08, 0.16, 0.32)
-				if tt == LevelData.TileType.LAVA:
-					mc = Color(0.78, 0.22, 0.05)
-				elif tt == LevelData.TileType.GRASS_FLOOR:
-					mc = Color(0.18, 0.42, 0.14)
-				elif tt == LevelData.TileType.COBBLE_FLOOR or tt == LevelData.TileType.BRIDGE_RAISED:
-					mc = Color(0.36, 0.28, 0.20)
-				elif tt == LevelData.TileType.PENTAGRAM_FLOOR:
-					mc = Color(0.68, 0.14, 0.18)
-				elif tt == LevelData.TileType.WALL_BLOCK:
-					mc = Color(0.78, 0.82, 0.88)
-				elif tt != LevelData.TileType.WATER and tt != LevelData.TileType.BRIDGE_SUNKEN:
-					mc = Color(0.54, 0.58, 0.66)
-				draw_rect(Rect2(ox + float(x) * cell_s, oy + float(y) * cell_s, cell_s - 0.5, cell_s - 0.5), mc)
+		draw_texture_rect(minimap_tex, Rect2(ox, oy, map_px, map_px), false)
+		for prop in props:
+			var pid: String = String(prop.get("id", ""))
+			var pp: Vector3 = prop["pos"]
+			if pid == "lever_bridge":
+				draw_circle(Vector2(ox + pp.x * cell_s, oy + pp.y * cell_s), 2.8, Color(0.35, 0.92, 1.0))
+			elif pid == "blackrock_obelisk":
+				draw_circle(Vector2(ox + pp.x * cell_s, oy + pp.y * cell_s), 3.2, Color(0.88, 0.35, 1.0))
+			elif pid == "gate_portcullis" and not bool(prop.get("opened", false)):
+				draw_circle(Vector2(ox + pp.x * cell_s, oy + pp.y * cell_s), 2.8, Color(0.96, 0.68, 0.24))
 		for enemy in enemies:
 			if int(enemy["hp"]) > 0:
 				var ep: Vector3 = enemy["pos"]
 				var ec := Color(1.0, 0.55, 0.1) if bool(enemy.get("final_boss", false)) else Color(1.0, 0.2, 0.2)
-				draw_circle(Vector2(ox + ep.x * cell_s, oy + ep.y * cell_s), 3.0 if bool(enemy.get("final_boss", false)) else 2.4, ec)
-		draw_circle(Vector2(ox + avatar_pos.x * cell_s, oy + avatar_pos.y * cell_s), 3.2, Color(1.0, 0.90, 0.25))
+				draw_circle(Vector2(ox + ep.x * cell_s, oy + ep.y * cell_s), 3.2 if bool(enemy.get("final_boss", false)) else 2.2, ec)
+		draw_circle(Vector2(ox + avatar_pos.x * cell_s, oy + avatar_pos.y * cell_s), 3.4, Color(1.0, 0.92, 0.25))
 
 	# 5c. Ultima VIII Avatar Paperdoll Gump (Center-Left, toggle with I or P)
 	if show_paperdoll:

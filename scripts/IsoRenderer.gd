@@ -15,15 +15,33 @@ func _draw() -> void:
 	if game == null or game.tiles.is_empty():
 		return
 
+	var vp_size: Vector2 = get_viewport_rect().size
 	var cam_offset: Vector2 = game.camera_offset
 	draw_set_transform(cam_offset, 0.0, Vector2.ONE)
 
+	# Viewport frustum bounds in world-screen space (with generous padding for tall walls/trees)
+	var min_sx: float = -cam_offset.x - 120.0
+	var max_sx: float = -cam_offset.x + vp_size.x + 120.0
+	var min_sy: float = -cam_offset.y - 140.0
+	var max_sy: float = -cam_offset.y + vp_size.y + 140.0
+
 	var draw_list: Array[Dictionary] = []
 	var tiles: Array = game.tiles
+	var map_w: int = tiles.size()
+	var map_h: int = (tiles[0] as Array).size() if map_w > 0 else 0
 
-	for x in range(LevelData.MAP_W):
-		for y in range(LevelData.MAP_H):
-			var t: Dictionary = tiles[x][y]
+	for x in range(map_w):
+		var col_arr: Array = tiles[x]
+		for y in range(map_h):
+			# Quick isometric screen-space frustum check before building dictionary
+			var approx_sx: float = float(x - y) * IsoMath.HALF_W
+			if approx_sx < min_sx or approx_sx > max_sx:
+				continue
+			var approx_sy: float = float(x + y) * IsoMath.HALF_H
+			if approx_sy < min_sy or approx_sy > max_sy + 90.0:
+				continue
+
+			var t: Dictionary = col_arr[y]
 			var z_eff: float = float(t["z"])
 			if int(t["type"]) == LevelData.TileType.CRUMBLING_STONE and bool(t["crumbled"]):
 				z_eff = 0.0
@@ -37,6 +55,9 @@ func _draw() -> void:
 
 	for prop in game.props:
 		var p: Vector3 = prop["pos"]
+		var sp: Vector2 = IsoMath.world_to_screen(p.x, p.y, p.z)
+		if sp.x < min_sx or sp.x > max_sx or sp.y < min_sy or sp.y > max_sy:
+			continue
 		draw_list.append({
 			"kind": "prop",
 			"depth": IsoMath.depth_key(p.x, p.y, p.z) + 12.0,
@@ -45,6 +66,9 @@ func _draw() -> void:
 
 	for drop in game.ground_items:
 		var p: Vector3 = drop["pos"]
+		var sp: Vector2 = IsoMath.world_to_screen(p.x, p.y, p.z)
+		if sp.x < min_sx or sp.x > max_sx or sp.y < min_sy or sp.y > max_sy:
+			continue
 		draw_list.append({
 			"kind": "drop",
 			"depth": IsoMath.depth_key(p.x, p.y, p.z) + 10.0,
@@ -55,6 +79,9 @@ func _draw() -> void:
 		if int(enemy["hp"]) <= 0:
 			continue
 		var p: Vector3 = enemy["pos"]
+		var sp: Vector2 = IsoMath.world_to_screen(p.x, p.y, p.z)
+		if sp.x < min_sx or sp.x > max_sx or sp.y < min_sy or sp.y > max_sy:
+			continue
 		draw_list.append({
 			"kind": "enemy",
 			"depth": IsoMath.depth_key(p.x, p.y, p.z) + 16.0,
@@ -108,7 +135,7 @@ func _draw() -> void:
 	_draw_pentagram_sigil()
 	if not game.in_start_menu:
 		_draw_target_reticle()
-	_draw_lighting_and_barks()
+	_draw_lighting_and_barks(min_sx, max_sx, min_sy, max_sy)
 
 func _draw_tile(x: int, y: int, t: Dictionary) -> void:
 	var t_type: int = int(t["type"])
@@ -125,7 +152,6 @@ func _draw_tile(x: int, y: int, t: Dictionary) -> void:
 	var anim_frame: int = int(time_sec * 3.5 + float(x + y)) % 3
 	var tex: ImageTexture = SpriteFactory.get_tile_sprite(t_type, variant, anim_frame)
 
-	# If solid block is high (z > 1.8), draw a base cliff block sprite underneath so cliffs reach the abyss
 	if z > 1.8 and t_type != LevelData.TileType.WATER and t_type != LevelData.TileType.LAVA:
 		var low_sp: Vector2 = IsoMath.world_to_screen(float(x), float(y), z - 1.8) + shake
 		draw_texture(tex, low_sp - Vector2(32.0, 0.0))
@@ -142,7 +168,7 @@ func _draw_pentagram_sigil() -> void:
 	var blood_col := Color(0.75, 0.12, 0.10, clampf(glow_factor, 0.3, 0.95))
 	var inner_glow := Color(1.0, 0.45, 0.12, clampf(glow_factor - 0.2, 0.0, 0.85))
 
-	var radius: float = 1.38
+	var radius: float = 1.65
 	var ring_pts := PackedVector2Array()
 	var segments: int = 32
 	for i in range(segments + 1):
@@ -276,12 +302,14 @@ func _draw_target_reticle() -> void:
 		var msp: Vector2 = IsoMath.world_to_screen(mw.x, mw.y, mw.z)
 		draw_arc(msp + Vector2(0, 16), 6.0, 0, TAU, 16, Color(0.85, 0.75, 0.45, 0.35), 1.2)
 
-func _draw_lighting_and_barks() -> void:
+func _draw_lighting_and_barks(min_sx: float, max_sx: float, min_sy: float, max_sy: float) -> void:
 	for prop in game.props:
 		var p_type: String = String(prop["type"])
 		if p_type == "brazier" and bool(prop.get("lit", false)):
 			var p: Vector3 = prop["pos"]
 			var sp: Vector2 = IsoMath.world_to_screen(p.x, p.y, p.z) + Vector2(0, -18)
+			if sp.x < min_sx - 80.0 or sp.x > max_sx + 80.0 or sp.y < min_sy - 80.0 or sp.y > max_sy + 80.0:
+				continue
 			var r: float = 68.0 + sin(time_sec * 9.0 + p.x) * 6.0
 			var glow_c: Color = Color(1.0, 0.45, 0.12, 0.07) if not bool(prop.get("ritual", false)) else Color(1.0, 0.22, 0.18, 0.10)
 			draw_circle(sp, r, glow_c)

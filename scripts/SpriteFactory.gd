@@ -26,7 +26,7 @@ static func get_avatar_sprite(facing: int, anim_phase: int, jumping: bool, attac
 	return tex
 
 static func get_enemy_sprite(e_type: String, anim_phase: int, flash: bool) -> ImageTexture:
-	var key: String = "en_u8_%s_%d_%d" % [e_type, anim_phase, int(flash)]
+	var key: String = "en_u8_v2_%s_%d_%d" % [e_type, anim_phase, int(flash)]
 	if cache.has(key):
 		return cache[key]
 	var tex: ImageTexture = _build_enemy_texture(e_type, anim_phase, flash)
@@ -492,72 +492,373 @@ static func _build_enemy_texture(e_type: String, anim_phase: int, flash: bool) -
 	var stride: int = -3 if anim_phase == 1 else (3 if anim_phase == 3 else 0)
 	var cx: int = 24
 
-	if e_type == "skeleton":
-		var c_bone := Color(1, 1, 1) if flash else Color(0.86, 0.82, 0.73)
-		var c_bone_sh := Color(1, 1, 1) if flash else Color(0.58, 0.54, 0.46)
-		var c_eye := Color(1.0, 0.18, 0.12)
-		_fill_rect(img, cx - 3, 12, 7, 6, c_bone)
-		_fill_rect(img, cx - 2, 18, 5, 2, c_bone_sh)
-		_set_px(img, cx - 2, 15, c_eye)
-		_set_px(img, cx + 2, 15, c_eye)
-		_fill_rect(img, cx, 20, 2, 12, c_bone_sh)
-		for r in range(4):
-			_fill_rect(img, cx - 4, 21 + r * 2, 9, 1, c_bone)
-		_fill_rect(img, cx - 3, 31, 7, 2, c_bone_sh)
-		_draw_line_px(img, cx - 2, 33, cx - 4 + stride, 46, c_bone)
-		_draw_line_px(img, cx + 2, 33, cx + 4 - stride, 46, c_bone)
-		# Rusted Iron Buckler & Scimitar
-		_fill_rect(img, cx - 9, 22, 5, 10, Color(0.38, 0.25, 0.15))
-		_fill_rect(img, cx - 8, 23, 3, 8, Color(0.68, 0.52, 0.22))
-		_draw_line_px(img, cx + 5, 26, cx + 15, 14 + stride, Color(0.78, 0.80, 0.86))
-	elif e_type == "titan_boss":
-		# Malchir / Pyros Arch-Executioner Titan Boss Sprite
-		var c_armor := Color(1, 0.8, 0.7) if flash else Color(0.18, 0.16, 0.22)
-		var c_crimson := Color(1, 0.5, 0.4) if flash else Color(0.86, 0.12, 0.12)
-		var c_gold := Color(0.98, 0.80, 0.24)
-		var c_flame := Color(1.0, 0.48, 0.08)
-		for y in range(11, 50):
-			var hw: int = 6 + int(float(y - 11) * 0.32)
-			_fill_rect(img, cx - hw, y, hw * 2 + 1, 1, c_armor)
-			_set_px(img, cx - hw, y, c_crimson)
-			_set_px(img, cx + hw, y, c_crimson)
-			if y % 4 == 0:
-				_set_px(img, cx - hw + 1, y, c_gold)
-				_set_px(img, cx + hw - 1, y, c_gold)
-		_fill_rect(img, cx - 12, 13, 6, 5, c_gold)
-		_fill_rect(img, cx + 7, 13, 6, 5, c_gold)
-		_fill_rect(img, cx - 13, 10, 2, 4, c_crimson)
-		_fill_rect(img, cx + 12, 10, 2, 4, c_crimson)
-		_fill_rect(img, cx - 4, 16, 9, 26, c_crimson)
-		_fill_rect(img, cx - 2, 18, 5, 3, c_gold)
-		_fill_rect(img, cx - 1, 16, 3, 12, c_gold)
-		_fill_rect(img, cx - 5, 5, 11, 9, Color(0.32, 0.35, 0.42))
-		_draw_line_px(img, cx - 5, 7, cx - 9, 2, c_gold)
-		_draw_line_px(img, cx + 5, 7, cx + 9, 2, c_gold)
-		_fill_rect(img, cx - 3, 9, 2, 2, Color(1.0, 0.88, 0.24))
-		_fill_rect(img, cx + 2, 9, 2, 2, Color(1.0, 0.88, 0.24))
-		_draw_line_px(img, cx + 8, 36, cx + 18, 5 + stride, c_gold)
-		_fill_rect(img, cx + 14, 5 + stride, 7, 14, c_flame)
-		_fill_rect(img, cx + 16, 6 + stride, 3, 11, Color(1.0, 0.94, 0.42))
-	else:
-		# Tenebrae Guard / Executioner in dark plate & crimson tabard
-		var c_robe := Color(1, 0.7, 0.7) if flash else Color(0.24, 0.25, 0.30)
-		var c_trim := Color(0.82, 0.14, 0.14)
-		var c_gold := Color(0.88, 0.68, 0.22)
-		var c_hood := Color(0.38, 0.40, 0.46)
-		for y in range(14, 48):
-			var hw: int = 4 + int(float(y - 14) * 0.26)
-			_fill_rect(img, cx - hw, y, hw * 2 + 1, 1, c_robe)
-			_set_px(img, cx - hw, y, c_trim)
-			_set_px(img, cx + hw, y, c_trim)
-		_fill_rect(img, cx - 3, 17, 7, 22, c_trim)
-		_fill_rect(img, cx - 3, 25, 7, 2, c_gold)
-		_fill_rect(img, cx - 4, 7, 9, 8, c_hood)
-		_set_px(img, cx - 2, 11, Color(1.0, 0.25, 0.12))
-		_set_px(img, cx + 2, 11, Color(1.0, 0.25, 0.12))
-		_draw_line_px(img, cx + 5, 32, cx + 16, 8 + stride, Color(0.48, 0.34, 0.20))
-		_fill_rect(img, cx + 12, 9 + stride, 7, 9, Color(0.75, 0.78, 0.84))
-		_fill_rect(img, cx + 17, 8 + stride, 2, 11, Color(0.90, 0.18, 0.18))
+	match e_type:
+		"kith":
+			# 1. Swamp Kith: Multi-legged emerald-chitin insectoid predator with mandibles
+			var c_shell := Color(1, 1, 1) if flash else Color(0.18, 0.48, 0.22)
+			var c_shell_hi := Color(1, 1, 1) if flash else Color(0.35, 0.68, 0.28)
+			var c_leg := Color(0.12, 0.26, 0.10)
+			_fill_rect(img, cx - 10, 30, 20, 11, c_shell)
+			_fill_rect(img, cx - 7, 28, 14, 7, c_shell_hi)
+			for i in range(-2, 3):
+				_draw_line_px(img, cx + i * 4, 38, cx + i * 6 + stride, 48, c_leg)
+			_fill_rect(img, cx - 5, 34, 3, 2, Color(1.0, 0.90, 0.15))
+			_fill_rect(img, cx + 3, 34, 3, 2, Color(1.0, 0.90, 0.15))
+			_draw_line_px(img, cx - 4, 40, cx - 7, 45, Color(0.85, 0.82, 0.68))
+			_draw_line_px(img, cx + 4, 40, cx + 7, 45, Color(0.85, 0.82, 0.68))
+
+		"changeling":
+			# 2. Morphing Changeling: Green-purple shapeshifter with elongated claws
+			var c_body := Color(1, 1, 1) if flash else Color(0.28, 0.56, 0.34)
+			var c_shift := Color(1, 1, 1) if flash else Color(0.52, 0.22, 0.58)
+			_fill_rect(img, cx - 5, 16, 11, 16, c_body)
+			_fill_rect(img, cx - 3, 18, 7, 10, c_shift)
+			_fill_rect(img, cx - 4, 9, 9, 8, c_body)
+			_set_px(img, cx - 2, 12, Color(1.0, 0.95, 0.20))
+			_set_px(img, cx + 2, 12, Color(1.0, 0.95, 0.20))
+			_draw_line_px(img, cx - 3, 32, cx - 5 + stride, 46, c_body)
+			_draw_line_px(img, cx + 3, 32, cx + 5 - stride, 46, c_shift)
+			_draw_line_px(img, cx - 5, 18, cx - 13, 28 + stride, c_shift)
+			_draw_line_px(img, cx + 5, 18, cx + 13, 28 - stride, c_body)
+
+		"seeker":
+			# 3. Floating Seeker Eye: Disembodied eyeball with hypnotic iris & trailing nerves
+			var c_sclera := Color(1, 1, 1) if flash else Color(0.92, 0.88, 0.82)
+			var c_iris := Color(0.22, 0.68, 0.92)
+			var c_vein := Color(0.78, 0.14, 0.18)
+			var bob: int = stride / 2
+			_fill_rect(img, cx - 8, 16 + bob, 17, 15, c_sclera)
+			_fill_rect(img, cx - 6, 14 + bob, 13, 19, c_sclera)
+			_fill_rect(img, cx - 4, 19 + bob, 9, 9, c_iris)
+			_fill_rect(img, cx - 2, 21 + bob, 5, 5, Color(0.05, 0.05, 0.08))
+			_set_px(img, cx - 1, 21 + bob, Color.WHITE)
+			for i in range(-2, 3):
+				_draw_line_px(img, cx + i * 2, 32 + bob, cx + i * 3 + stride, 45, c_vein)
+
+		"torax":
+			# 4. Torax Hive Drone: Winged wasp-like insectoid with yellow-black stripes
+			var c_yel := Color(1, 1, 1) if flash else Color(0.92, 0.74, 0.14)
+			var c_blk := Color(0.12, 0.10, 0.14)
+			var c_wing := Color(0.75, 0.88, 0.96, 0.85)
+			_fill_rect(img, cx - 13, 12 - stride, 10, 7, c_wing)
+			_fill_rect(img, cx + 4, 12 + stride, 10, 7, c_wing)
+			_fill_rect(img, cx - 4, 16, 9, 18, c_yel)
+			for y_s in range(18, 33, 4):
+				_fill_rect(img, cx - 4, y_s, 9, 2, c_blk)
+			_fill_rect(img, cx - 3, 10, 7, 6, c_blk)
+			_set_px(img, cx - 2, 12, Color(1.0, 0.2, 0.1))
+			_set_px(img, cx + 2, 12, Color(1.0, 0.2, 0.1))
+			_draw_line_px(img, cx, 34, cx, 42, Color(0.95, 0.95, 0.95))
+
+		"ghoul":
+			# 5. Catacomb Ghoul: Hunched decaying corpse-eater with bloodied claws
+			var c_flesh := Color(1, 1, 1) if flash else Color(0.46, 0.58, 0.42)
+			var c_sh := Color(1, 1, 1) if flash else Color(0.28, 0.36, 0.25)
+			var c_blood := Color(0.82, 0.12, 0.12)
+			_fill_rect(img, cx - 6, 18, 12, 14, c_flesh)
+			_fill_rect(img, cx - 4, 20, 8, 10, c_sh)
+			_fill_rect(img, cx - 5, 11, 8, 8, c_flesh)
+			_set_px(img, cx - 3, 14, c_blood)
+			_set_px(img, cx + 1, 14, c_blood)
+			_fill_rect(img, cx - 3, 17, 5, 2, c_blood)
+			_fill_rect(img, cx - 5 + stride, 32, 4, 14, c_sh)
+			_fill_rect(img, cx + 2 - stride, 32, 4, 14, c_sh)
+			_fill_rect(img, cx - 11, 24 + stride, 5, 4, c_blood)
+			_fill_rect(img, cx + 7, 24 - stride, 5, 4, c_blood)
+
+		"zombie":
+			# 6. Risen Pagan Zombie: Shambling undead peasant in tattered olive/brown rags
+			var c_zskin := Color(1, 1, 1) if flash else Color(0.52, 0.62, 0.48)
+			var c_rags := Color(1, 1, 1) if flash else Color(0.36, 0.28, 0.18)
+			var c_pants := Color(0.24, 0.28, 0.20)
+			_fill_rect(img, cx - 4, 9, 8, 8, c_zskin)
+			_set_px(img, cx - 2, 12, Color(0.9, 0.2, 0.1))
+			_set_px(img, cx + 1, 12, Color(0.9, 0.2, 0.1))
+			_fill_rect(img, cx - 6, 17, 12, 15, c_rags)
+			_fill_rect(img, cx - 11, 18, 6, 4, c_zskin) # Outstretched zombie arms
+			_fill_rect(img, cx + 5, 18, 6, 4, c_zskin)
+			_fill_rect(img, cx - 5 + stride, 32, 4, 15, c_pants)
+			_fill_rect(img, cx + 1 - stride, 32, 4, 15, c_pants)
+
+		"ghost":
+			# 7. Wailing Ghost of Tenebrae: Translucent cyan-white spectral apparition
+			var c_sp1 := Color(1, 1, 1) if flash else Color(0.62, 0.92, 0.98, 0.85)
+			var c_sp2 := Color(1, 1, 1) if flash else Color(0.32, 0.68, 0.88, 0.70)
+			for y in range(10, 46):
+				var wave: int = int(sin(float(y) * 0.4 + float(anim_phase)) * 2.0)
+				var hw: int = 4 + int(float(y - 10) * 0.22)
+				_fill_rect(img, cx - hw + wave, y, hw * 2, 1, c_sp1 if y < 28 else c_sp2)
+			_fill_rect(img, cx - 3, 14, 2, 3, Color(0.05, 0.12, 0.22))
+			_fill_rect(img, cx + 1, 14, 2, 3, Color(0.05, 0.12, 0.22))
+			_fill_rect(img, cx - 2, 19, 4, 4, Color(0.05, 0.12, 0.22))
+
+		"fire_imp":
+			# 8. Pyros Fire Imp: Winged crimson-orange devilkin wreathed in embers
+			var c_imp := Color(1, 1, 1) if flash else Color(0.92, 0.26, 0.08)
+			var c_wing := Color(0.58, 0.12, 0.06)
+			var c_fire := Color(1.0, 0.86, 0.22)
+			_fill_rect(img, cx - 12, 15 + stride, 8, 10, c_wing)
+			_fill_rect(img, cx + 5, 15 - stride, 8, 10, c_wing)
+			_fill_rect(img, cx - 4, 18, 9, 14, c_imp)
+			_fill_rect(img, cx - 4, 11, 9, 7, c_imp)
+			_draw_line_px(img, cx - 4, 11, cx - 7, 7, c_fire)
+			_draw_line_px(img, cx + 4, 11, cx + 7, 7, c_fire)
+			_fill_rect(img, cx - 2, 13, 2, 2, c_fire)
+			_fill_rect(img, cx + 1, 13, 2, 2, c_fire)
+			_draw_line_px(img, cx - 3, 32, cx - 5 + stride, 44, c_imp)
+			_draw_line_px(img, cx + 3, 32, cx + 5 - stride, 44, c_imp)
+
+		"skeleton":
+			# 9. Restless Skeleton: Undead warrior with buckler & scimitar
+			var c_bone := Color(1, 1, 1) if flash else Color(0.86, 0.82, 0.73)
+			var c_bone_sh := Color(1, 1, 1) if flash else Color(0.58, 0.54, 0.46)
+			var c_eye := Color(1.0, 0.18, 0.12)
+			_fill_rect(img, cx - 3, 12, 7, 6, c_bone)
+			_fill_rect(img, cx - 2, 18, 5, 2, c_bone_sh)
+			_set_px(img, cx - 2, 15, c_eye)
+			_set_px(img, cx + 2, 15, c_eye)
+			_fill_rect(img, cx, 20, 2, 12, c_bone_sh)
+			for r in range(4):
+				_fill_rect(img, cx - 4, 21 + r * 2, 9, 1, c_bone)
+			_fill_rect(img, cx - 3, 31, 7, 2, c_bone_sh)
+			_draw_line_px(img, cx - 2, 33, cx - 4 + stride, 46, c_bone)
+			_draw_line_px(img, cx + 2, 33, cx + 4 - stride, 46, c_bone)
+			_fill_rect(img, cx - 9, 22, 5, 10, Color(0.38, 0.25, 0.15))
+			_fill_rect(img, cx - 8, 23, 3, 8, Color(0.68, 0.52, 0.22))
+			_draw_line_px(img, cx + 5, 26, cx + 15, 14 + stride, Color(0.78, 0.80, 0.86))
+
+		"outcast":
+			# 10. Heretic Outcast: Hooded rogue in forest-brown cloak with twin daggers
+			var c_cloak := Color(1, 1, 1) if flash else Color(0.34, 0.24, 0.14)
+			var c_tunic := Color(1, 1, 1) if flash else Color(0.22, 0.38, 0.18)
+			var c_steel := Color(0.82, 0.86, 0.92)
+			_fill_rect(img, cx - 4, 8, 9, 8, c_cloak)
+			_fill_rect(img, cx - 2, 11, 5, 4, Color(0.76, 0.56, 0.42))
+			_fill_rect(img, cx - 6, 16, 13, 16, c_tunic)
+			_fill_rect(img, cx - 7, 16, 3, 18, c_cloak)
+			_fill_rect(img, cx + 5, 16, 3, 18, c_cloak)
+			_fill_rect(img, cx - 4 + stride, 32, 4, 15, c_cloak)
+			_fill_rect(img, cx + 1 - stride, 32, 4, 15, c_cloak)
+			_draw_line_px(img, cx - 8, 26, cx - 14, 19 + stride, c_steel)
+			_draw_line_px(img, cx + 8, 26, cx + 14, 19 - stride, c_steel)
+
+		"zealan_monk":
+			# 11. Fallen Zealan Fanatic: Saffron-gold & violet robed cultist with ritual staff
+			var c_robe := Color(1, 1, 1) if flash else Color(0.46, 0.18, 0.54)
+			var c_saffron := Color(0.92, 0.72, 0.18)
+			for y in range(15, 47):
+				var hw: int = 4 + int(float(y - 15) * 0.24)
+				_fill_rect(img, cx - hw, y, hw * 2 + 1, 1, c_robe)
+			_fill_rect(img, cx - 2, 16, 5, 28, c_saffron)
+			_fill_rect(img, cx - 4, 8, 9, 8, c_saffron)
+			_set_px(img, cx - 2, 12, Color(0.2, 0.9, 1.0))
+			_set_px(img, cx + 2, 12, Color(0.2, 0.9, 1.0))
+			_draw_line_px(img, cx + 7, 46, cx + 9, 8, Color(0.55, 0.36, 0.18))
+			_fill_rect(img, cx + 7, 6, 5, 5, Color(0.35, 0.92, 0.98))
+
+		"necromancer":
+			# 12. Scion of Lithos: Earthen-brown Necromancer in skull mask with bone staff
+			var c_robe := Color(1, 1, 1) if flash else Color(0.26, 0.20, 0.14)
+			var c_bone := Color(0.88, 0.84, 0.74)
+			var c_emerald := Color(0.22, 0.92, 0.38)
+			for y in range(15, 48):
+				var hw: int = 5 + int(float(y - 15) * 0.25)
+				_fill_rect(img, cx - hw, y, hw * 2 + 1, 1, c_robe)
+			_fill_rect(img, cx - 4, 8, 9, 8, c_bone)
+			_set_px(img, cx - 2, 11, c_emerald)
+			_set_px(img, cx + 2, 11, c_emerald)
+			_draw_line_px(img, cx - 8, 46, cx - 10, 9, c_bone)
+			_fill_rect(img, cx - 12, 6, 5, 5, c_emerald)
+
+		"theurgist":
+			# 13. Acolyte of Stratos: Azure & silver robed Wind Theurgist with lightning orb
+			var c_azure := Color(1, 1, 1) if flash else Color(0.18, 0.46, 0.82)
+			var c_silver := Color(0.86, 0.90, 0.96)
+			for y in range(15, 47):
+				var hw: int = 4 + int(float(y - 15) * 0.25)
+				_fill_rect(img, cx - hw, y, hw * 2 + 1, 1, c_azure)
+			_fill_rect(img, cx - 2, 16, 5, 29, c_silver)
+			_fill_rect(img, cx - 4, 8, 9, 8, c_silver)
+			_set_px(img, cx - 2, 12, Color(0.2, 0.8, 1.0))
+			_set_px(img, cx + 2, 12, Color(0.2, 0.8, 1.0))
+			_fill_rect(img, cx + 8, 18 + stride, 6, 6, Color(0.45, 0.95, 1.0))
+
+		"tempest_guard":
+			# 14. Mordea's Palace Guard: Teal-and-steel armored Tenebrae halberdier
+			var c_teal := Color(1, 1, 1) if flash else Color(0.14, 0.44, 0.48)
+			var c_steel := Color(1, 1, 1) if flash else Color(0.64, 0.68, 0.76)
+			var c_gold := Color(0.90, 0.72, 0.22)
+			_fill_rect(img, cx - 4, 7, 9, 8, c_steel)
+			_fill_rect(img, cx - 2, 5, 5, 3, c_teal) # Plume
+			_fill_rect(img, cx - 6, 15, 13, 16, c_teal)
+			_fill_rect(img, cx - 8, 15, 3, 5, c_gold)
+			_fill_rect(img, cx + 6, 15, 3, 5, c_gold)
+			_fill_rect(img, cx - 4 + stride, 31, 4, 16, c_steel)
+			_fill_rect(img, cx + 1 - stride, 31, 4, 16, c_steel)
+			_draw_line_px(img, cx + 8, 46, cx + 10, 5, Color(0.45, 0.30, 0.16))
+			_fill_rect(img, cx + 8, 6, 6, 9, c_steel)
+
+		"sorcerer":
+			# 15. Cabal Sorcerer of Pyros: Crimson-and-black hooded mage with flaming rod
+			var c_blk := Color(1, 1, 1) if flash else Color(0.14, 0.08, 0.12)
+			var c_red := Color(0.92, 0.16, 0.14)
+			var c_fire := Color(1.0, 0.78, 0.18)
+			for y in range(14, 48):
+				var hw: int = 5 + int(float(y - 14) * 0.26)
+				_fill_rect(img, cx - hw, y, hw * 2 + 1, 1, c_blk)
+				_set_px(img, cx - hw, y, c_red)
+				_set_px(img, cx + hw, y, c_red)
+			_fill_rect(img, cx - 4, 7, 9, 8, c_red)
+			_set_px(img, cx - 2, 11, c_fire)
+			_set_px(img, cx + 2, 11, c_fire)
+			_draw_line_px(img, cx + 7, 42, cx + 13, 10, c_red)
+			_fill_rect(img, cx + 10, 6, 7, 7, c_fire)
+
+		"troll":
+			# 16. Cave Troll of Carthax: Hulking mossy-green brute with massive stone club
+			var c_troll := Color(1, 1, 1) if flash else Color(0.28, 0.44, 0.22)
+			var c_troll_hi := Color(1, 1, 1) if flash else Color(0.40, 0.58, 0.30)
+			var c_club := Color(0.42, 0.30, 0.18)
+			_fill_rect(img, cx - 9, 14, 19, 19, c_troll)
+			_fill_rect(img, cx - 7, 16, 15, 14, c_troll_hi)
+			_fill_rect(img, cx - 5, 7, 11, 8, c_troll_hi)
+			_fill_rect(img, cx - 3, 10, 2, 2, Color(1.0, 0.3, 0.1))
+			_fill_rect(img, cx + 2, 10, 2, 2, Color(1.0, 0.3, 0.1))
+			_fill_rect(img, cx - 7 + stride, 33, 6, 15, c_troll)
+			_fill_rect(img, cx + 2 - stride, 33, 6, 15, c_troll)
+			_fill_rect(img, cx + 10, 10 + stride, 7, 22, c_club)
+
+		"gargoyle":
+			# 17. Winged Obsidian Gargoyle: Horned stone fiend with bat wings & talons
+			var c_stone := Color(1, 1, 1) if flash else Color(0.38, 0.41, 0.48)
+			var c_wing := Color(1, 1, 1) if flash else Color(0.24, 0.26, 0.32)
+			_fill_rect(img, cx - 16, 11 + stride, 10, 16, c_wing)
+			_fill_rect(img, cx + 7, 11 - stride, 10, 16, c_wing)
+			_fill_rect(img, cx - 6, 15, 13, 16, c_stone)
+			_fill_rect(img, cx - 4, 8, 9, 7, c_stone)
+			_draw_line_px(img, cx - 4, 8, cx - 8, 3, Color(0.75, 0.78, 0.84))
+			_draw_line_px(img, cx + 4, 8, cx + 8, 3, Color(0.75, 0.78, 0.84))
+			_set_px(img, cx - 2, 11, Color(1.0, 0.45, 0.1))
+			_set_px(img, cx + 2, 11, Color(1.0, 0.45, 0.1))
+			_fill_rect(img, cx - 5 + stride, 31, 4, 15, c_stone)
+			_fill_rect(img, cx + 2 - stride, 31, 4, 15, c_stone)
+
+		"water_lurker":
+			# 18. Spawn of the Lurker: Tentacled deep-sea horror of Hydros
+			var c_sea := Color(1, 1, 1) if flash else Color(0.12, 0.48, 0.56)
+			var c_fin := Color(1, 1, 1) if flash else Color(0.28, 0.82, 0.76)
+			_fill_rect(img, cx - 8, 14, 17, 18, c_sea)
+			_fill_rect(img, cx - 5, 10, 11, 6, c_fin)
+			_fill_rect(img, cx - 4, 17, 3, 3, Color(1.0, 0.92, 0.24))
+			_fill_rect(img, cx + 2, 17, 3, 3, Color(1.0, 0.92, 0.24))
+			for i in range(-3, 4):
+				_draw_line_px(img, cx + i * 2, 32, cx + i * 3 + stride, 47, c_fin if i % 2 == 0 else c_sea)
+
+		"earth_golem":
+			# 19. Golem of Lithos: Massive granite boulder construct with glowing emerald core
+			var c_rock := Color(1, 1, 1) if flash else Color(0.46, 0.38, 0.28)
+			var c_rock_d := Color(1, 1, 1) if flash else Color(0.32, 0.26, 0.18)
+			var c_gem := Color(0.20, 0.96, 0.42)
+			_fill_rect(img, cx - 10, 12, 21, 20, c_rock_d)
+			_fill_rect(img, cx - 8, 14, 17, 16, c_rock)
+			_fill_rect(img, cx - 6, 6, 13, 8, c_rock)
+			_fill_rect(img, cx - 3, 20, 7, 6, c_gem) # Emerald heart
+			_fill_rect(img, cx - 3, 9, 2, 2, c_gem)
+			_fill_rect(img, cx + 2, 9, 2, 2, c_gem)
+			_fill_rect(img, cx - 8 + stride, 32, 7, 16, c_rock_d)
+			_fill_rect(img, cx + 2 - stride, 32, 7, 16, c_rock_d)
+
+		"aerial_servant":
+			# 20. Whirlwind Elemental: Swirling cyclone spirit of Stratos
+			var c_wind1 := Color(1, 1, 1) if flash else Color(0.55, 0.88, 1.0)
+			var c_wind2 := Color(1, 1, 1) if flash else Color(0.85, 0.96, 1.0)
+			for y in range(8, 48):
+				var span: int = 12 - int(float(y - 8) * 0.24)
+				var shift: int = int(sin(float(y) * 0.5 + float(anim_phase) * 1.5) * 3.0)
+				_fill_rect(img, cx - span + shift, y, span * 2, 1, c_wind2 if y % 3 == 0 else c_wind1)
+			_fill_rect(img, cx - 4, 14, 3, 2, Color(1.0, 1.0, 0.4))
+			_fill_rect(img, cx + 2, 14, 3, 2, Color(1.0, 1.0, 0.4))
+
+		"hellhound":
+			# 21. Brimstone Hellhound: Quadruped magma mastiff with fiery mane
+			var c_coat := Color(1, 1, 1) if flash else Color(0.32, 0.08, 0.06)
+			var c_mane := Color(1.0, 0.52, 0.10)
+			_fill_rect(img, cx - 12, 26, 24, 11, c_coat)
+			_fill_rect(img, cx - 14, 20, 10, 9, c_coat)
+			_fill_rect(img, cx - 9, 19, 8, 7, c_mane)
+			_set_px(img, cx - 12, 22, Color(1.0, 0.95, 0.25))
+			_fill_rect(img, cx - 11 + stride, 37, 4, 11, c_coat)
+			_fill_rect(img, cx - 5 - stride, 37, 4, 11, c_coat)
+			_fill_rect(img, cx + 4 + stride, 37, 4, 11, c_coat)
+			_fill_rect(img, cx + 9 - stride, 37, 4, 11, c_coat)
+			_draw_line_px(img, cx + 11, 27, cx + 17, 21 + stride, c_mane)
+
+		"daemon":
+			# 22. Greater Daemon of Pyros: Towering horned crimson winged fiend
+			var c_red := Color(1, 1, 1) if flash else Color(0.78, 0.12, 0.10)
+			var c_dark := Color(0.24, 0.04, 0.06)
+			var c_flame := Color(1.0, 0.82, 0.20)
+			_fill_rect(img, cx - 17, 8 + stride, 11, 20, c_dark)
+			_fill_rect(img, cx + 7, 8 - stride, 11, 20, c_dark)
+			_fill_rect(img, cx - 7, 14, 15, 18, c_red)
+			_fill_rect(img, cx - 5, 6, 11, 8, c_red)
+			_draw_line_px(img, cx - 5, 6, cx - 10, 1, c_flame)
+			_draw_line_px(img, cx + 5, 6, cx + 10, 1, c_flame)
+			_fill_rect(img, cx - 3, 9, 2, 2, c_flame)
+			_fill_rect(img, cx + 2, 9, 2, 2, c_flame)
+			_fill_rect(img, cx - 6 + stride, 32, 5, 16, c_red)
+			_fill_rect(img, cx + 2 - stride, 32, 5, 16, c_red)
+			_draw_line_px(img, cx + 8, 30, cx + 18, 6 - stride, c_flame)
+
+		"titan_boss":
+			# 24. Malchir / Pyros Arch-Executioner Titan Boss Sprite
+			var c_armor := Color(1, 0.8, 0.7) if flash else Color(0.18, 0.16, 0.22)
+			var c_crimson := Color(1, 0.5, 0.4) if flash else Color(0.86, 0.12, 0.12)
+			var c_gold := Color(0.98, 0.80, 0.24)
+			var c_flame := Color(1.0, 0.48, 0.08)
+			for y in range(11, 50):
+				var hw: int = 6 + int(float(y - 11) * 0.32)
+				_fill_rect(img, cx - hw, y, hw * 2 + 1, 1, c_armor)
+				_set_px(img, cx - hw, y, c_crimson)
+				_set_px(img, cx + hw, y, c_crimson)
+				if y % 4 == 0:
+					_set_px(img, cx - hw + 1, y, c_gold)
+					_set_px(img, cx + hw - 1, y, c_gold)
+			_fill_rect(img, cx - 12, 13, 6, 5, c_gold)
+			_fill_rect(img, cx + 7, 13, 6, 5, c_gold)
+			_fill_rect(img, cx - 13, 10, 2, 4, c_crimson)
+			_fill_rect(img, cx + 12, 10, 2, 4, c_crimson)
+			_fill_rect(img, cx - 4, 16, 9, 26, c_crimson)
+			_fill_rect(img, cx - 2, 18, 5, 3, c_gold)
+			_fill_rect(img, cx - 1, 16, 3, 12, c_gold)
+			_fill_rect(img, cx - 5, 5, 11, 9, Color(0.32, 0.35, 0.42))
+			_draw_line_px(img, cx - 5, 7, cx - 9, 2, c_gold)
+			_draw_line_px(img, cx + 5, 7, cx + 9, 2, c_gold)
+			_fill_rect(img, cx - 3, 9, 2, 2, Color(1.0, 0.88, 0.24))
+			_fill_rect(img, cx + 2, 9, 2, 2, Color(1.0, 0.88, 0.24))
+			_draw_line_px(img, cx + 8, 36, cx + 18, 5 + stride, c_gold)
+			_fill_rect(img, cx + 14, 5 + stride, 7, 14, c_flame)
+			_fill_rect(img, cx + 16, 6 + stride, 3, 11, Color(1.0, 0.94, 0.42))
+
+		_:
+			# 23. Tenebrae High Executioner (Default / "executioner")
+			var c_robe := Color(1, 0.7, 0.7) if flash else Color(0.24, 0.25, 0.30)
+			var c_trim := Color(0.82, 0.14, 0.14)
+			var c_gold := Color(0.88, 0.68, 0.22)
+			var c_hood := Color(0.38, 0.40, 0.46)
+			for y in range(14, 48):
+				var hw: int = 4 + int(float(y - 14) * 0.26)
+				_fill_rect(img, cx - hw, y, hw * 2 + 1, 1, c_robe)
+				_set_px(img, cx - hw, y, c_trim)
+				_set_px(img, cx + hw, y, c_trim)
+			_fill_rect(img, cx - 3, 17, 7, 22, c_trim)
+			_fill_rect(img, cx - 3, 25, 7, 2, c_gold)
+			_fill_rect(img, cx - 4, 7, 9, 8, c_hood)
+			_set_px(img, cx - 2, 11, Color(1.0, 0.25, 0.12))
+			_set_px(img, cx + 2, 11, Color(1.0, 0.25, 0.12))
+			_draw_line_px(img, cx + 5, 32, cx + 16, 8 + stride, Color(0.48, 0.34, 0.20))
+			_fill_rect(img, cx + 12, 9 + stride, 7, 9, Color(0.75, 0.78, 0.84))
+			_fill_rect(img, cx + 17, 8 + stride, 2, 11, Color(0.90, 0.18, 0.18))
 
 	_add_outline(img)
 	return ImageTexture.create_from_image(img)

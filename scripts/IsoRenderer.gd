@@ -267,12 +267,18 @@ func _draw_enemy(enemy: Dictionary) -> void:
 		var tex: ImageTexture = SpriteFactory.get_enemy_sprite(e_type, anim_phase, flash)
 		draw_texture_rect(tex, Rect2(sp.x - 30.0, sp.y - 58.0, 60.0, 70.0), false)
 
-	if int(enemy["hp"]) < int(enemy["max_hp"]) or is_final_boss:
-		var ratio: float = clampf(float(enemy["hp"]) / float(enemy["max_hp"]), 0.0, 1.0)
-		var bar_w: float = 42.0 if is_final_boss else 28.0
-		var by: float = (sp.y - 70.0) if is_final_boss else (sp.y - 54.0)
-		draw_rect(Rect2(sp.x - bar_w * 0.5, by, bar_w, 5.0 if is_final_boss else 4.0), Color(0.1, 0.05, 0.05, 0.85))
-		draw_rect(Rect2(sp.x - bar_w * 0.5, by, bar_w * ratio, 5.0 if is_final_boss else 4.0), Color(0.96, 0.26, 0.12, 0.95))
+	var cur_hp: int = int(enemy["hp"])
+	var max_hp_v: int = int(enemy["max_hp"])
+	var ratio: float = clampf(float(cur_hp) / float(max_hp_v), 0.0, 1.0)
+	var bar_w: float = 44.0 if is_final_boss else 30.0
+	var by: float = (sp.y - 72.0) if is_final_boss else (sp.y - 56.0)
+	draw_rect(Rect2(sp.x - bar_w * 0.5, by, bar_w, 5.0 if is_final_boss else 4.0), Color(0.1, 0.05, 0.05, 0.85))
+	draw_rect(Rect2(sp.x - bar_w * 0.5, by, bar_w * ratio, 5.0 if is_final_boss else 4.0), Color(0.96, 0.26, 0.12, 0.95))
+	var font: Font = ThemeDB.fallback_font
+	var hp_txt: String = str(cur_hp) + "/" + str(max_hp_v)
+	var htw: float = font.get_string_size(hp_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 10).x
+	draw_string_outline(font, Vector2(sp.x - htw * 0.5, by - 3.0), hp_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, 2, Color.BLACK)
+	draw_string(font, Vector2(sp.x - htw * 0.5, by - 3.0), hp_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1.0, 0.92, 0.55))
 
 func _draw_projectile(proj: Dictionary) -> void:
 	var p: Vector3 = proj["pos"]

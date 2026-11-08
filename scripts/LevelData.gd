@@ -60,6 +60,33 @@ const REALM_LORDS: Array[String] = [
 	"of the Avatar"
 ]
 
+# 23 Distinct Regular/Elite Enemy Types (+ 24th Titan Boss) — Every single enemy has a unique HP value, Sprite & Death SFX!
+const ENEMY_CATALOG: Array[Dictionary] = [
+	{"type": "kith", "name": "Swamp Kith", "hp": 28, "damage": 8, "speed": 2.35, "ranged": false},
+	{"type": "changeling", "name": "Morphing Changeling", "hp": 34, "damage": 9, "speed": 2.40, "ranged": false},
+	{"type": "seeker", "name": "Floating Seeker Eye", "hp": 38, "damage": 10, "speed": 2.20, "ranged": true},
+	{"type": "torax", "name": "Torax Hive Drone", "hp": 44, "damage": 10, "speed": 2.45, "ranged": false},
+	{"type": "ghoul", "name": "Catacomb Ghoul", "hp": 50, "damage": 11, "speed": 2.15, "ranged": false},
+	{"type": "zombie", "name": "Risen Pagan Zombie", "hp": 56, "damage": 12, "speed": 1.85, "ranged": false},
+	{"type": "ghost", "name": "Wailing Ghost of Tenebrae", "hp": 62, "damage": 12, "speed": 2.25, "ranged": false},
+	{"type": "fire_imp", "name": "Pyros Fire Imp", "hp": 66, "damage": 13, "speed": 2.30, "ranged": true},
+	{"type": "skeleton", "name": "Restless Skeleton", "hp": 72, "damage": 13, "speed": 2.10, "ranged": false},
+	{"type": "outcast", "name": "Heretic Outcast", "hp": 78, "damage": 14, "speed": 2.30, "ranged": false},
+	{"type": "zealan_monk", "name": "Fallen Zealan Fanatic", "hp": 84, "damage": 14, "speed": 2.10, "ranged": false},
+	{"type": "necromancer", "name": "Scion of Lithos", "hp": 90, "damage": 15, "speed": 2.05, "ranged": true},
+	{"type": "theurgist", "name": "Acolyte of Stratos", "hp": 96, "damage": 15, "speed": 2.15, "ranged": true},
+	{"type": "tempest_guard", "name": "Mordea's Palace Guard", "hp": 104, "damage": 16, "speed": 2.15, "ranged": false},
+	{"type": "sorcerer", "name": "Cabal Sorcerer of Pyros", "hp": 112, "damage": 16, "speed": 2.10, "ranged": true},
+	{"type": "troll", "name": "Cave Troll of Carthax", "hp": 122, "damage": 18, "speed": 1.90, "ranged": false},
+	{"type": "gargoyle", "name": "Winged Obsidian Gargoyle", "hp": 132, "damage": 17, "speed": 2.25, "ranged": false},
+	{"type": "water_lurker", "name": "Spawn of the Lurker", "hp": 142, "damage": 18, "speed": 2.05, "ranged": false},
+	{"type": "earth_golem", "name": "Golem of Lithos", "hp": 154, "damage": 20, "speed": 1.80, "ranged": false},
+	{"type": "aerial_servant", "name": "Whirlwind Elemental", "hp": 165, "damage": 17, "speed": 2.40, "ranged": true},
+	{"type": "hellhound", "name": "Brimstone Hellhound", "hp": 176, "damage": 19, "speed": 2.45, "ranged": false},
+	{"type": "executioner", "name": "Tenebrae High Executioner", "hp": 190, "damage": 20, "speed": 2.20, "ranged": true},
+	{"type": "daemon", "name": "Greater Daemon of Pyros", "hp": 215, "damage": 22, "speed": 2.30, "ranged": true}
+]
+
 static func get_level_title(level_num: int, rng: RandomNumberGenerator) -> String:
 	if level_num == 6:
 		return "The Grand Citadel of Malchir (BOSS)"
@@ -647,171 +674,72 @@ static func _build_procedural_level(rng: RandomNumberGenerator, level_num: int) 
 		props.append(p_copy)
 
 	# =========================================================================
-	# PROCEDURAL ENEMY PATROLS ACROSS ALL 5 DISTRICTS (12 to 16 enemies)
+	# PROCEDURAL ENEMY PATROLS — ALL 23 DISTINCT ENEMY TYPES ACROSS THE 5 DISTRICTS!
+	# Every enemy has a unique sprite, unique death SFX, and strictly different Hit Points!
 	# =========================================================================
 	var eff_tier: int = mini(level_num, 25)
-	var hp_scale: int = (eff_tier - 1) * 6
+	var hp_scale: int = (eff_tier - 1) * 5
 	var dmg_scale: int = (eff_tier - 1) * 1
-	var spd_scale: float = minf(0.45, float(eff_tier) * 0.02)
+	var spd_scale: float = minf(0.40, float(eff_tier) * 0.018)
 
-	var raw_enemies: Array = [
-		{
-			"id": "skel_outskirts_1",
-			"type": "skeleton",
-			"name": "Outskirts Road Sentinel",
-			"pos": Vector3(float(road_x) + 1.5, 53.5, base_elev),
-			"hp": 40 + hp_scale,
-			"max_hp": 40 + hp_scale,
-			"damage": 10 + dmg_scale,
-			"speed": 2.05 + spd_scale,
-			"attack_cd": 0.0,
-			"hit_flash": 0.0,
-			"state": "patrol",
-			"facing": 2,
-			"anim_t": 0.2
-		},
-		{
-			"id": "skel_outskirts_2",
-			"type": "skeleton",
-			"name": "Tavern Alley Skulker",
-			"pos": Vector3(float(road_x) + 7.5, 59.0, base_elev),
-			"hp": 42 + hp_scale,
-			"max_hp": 42 + hp_scale,
-			"damage": 11 + dmg_scale,
-			"speed": 2.05 + spd_scale,
-			"attack_cd": 0.0,
-			"hit_flash": 0.0,
-			"state": "patrol",
-			"facing": 4,
-			"anim_t": 0.9
-		},
-		{
-			"id": "skel_market_1",
-			"type": "skeleton",
-			"name": "Market Commons Patrol",
-			"pos": Vector3(float(mid_x) + 1.5, float(ave_y) + 3.5, base_elev),
-			"hp": 45 + hp_scale,
-			"max_hp": 45 + hp_scale,
-			"damage": 11 + dmg_scale,
-			"speed": 2.10 + spd_scale,
-			"attack_cd": 0.0,
-			"hit_flash": 0.0,
-			"state": "patrol",
-			"facing": 2,
-			"anim_t": 0.0
-		},
-		{
-			"id": "skel_market_2",
-			"type": "skeleton",
-			"name": "East Avenue Bone Guard",
-			"pos": Vector3(float(east_creek_x) - 4.5, float(ave_y) + 0.5, base_elev),
-			"hp": 48 + hp_scale,
-			"max_hp": 48 + hp_scale,
-			"damage": 12 + dmg_scale,
-			"speed": 2.10 + spd_scale,
-			"attack_cd": 0.0,
-			"hit_flash": 0.0,
-			"state": "patrol",
-			"facing": 6,
-			"anim_t": 1.1
-		},
-		{
-			"id": "wraith_market",
-			"type": "executioner",
-			"name": "Market Inquisitor",
-			"pos": Vector3(float(mid_x) + 1.5, float(canal_y) + 7.5, base_elev),
-			"hp": 68 + hp_scale,
-			"max_hp": 68 + hp_scale,
-			"damage": 14 + dmg_scale,
-			"speed": 2.15 + spd_scale,
-			"attack_cd": 0.0,
-			"cast_cd": 3.0,
-			"hit_flash": 0.0,
-			"state": "guard",
-			"facing": 2,
-			"anim_t": 0.5,
-			"boss": false
-		},
-		{
-			"id": "skel_watchtower_1",
-			"type": "skeleton",
-			"name": "Watchtower Keep Guard",
-			"pos": Vector3(keep_cx - 2.0, keep_cy + 1.0, tw_z + 0.08),
-			"hp": 52 + hp_scale,
-			"max_hp": 52 + hp_scale,
-			"damage": 13 + dmg_scale,
-			"speed": 2.15 + spd_scale,
-			"attack_cd": 0.0,
-			"hit_flash": 0.0,
-			"state": "patrol",
-			"facing": 4,
-			"anim_t": 1.3
-		},
-		{
-			"id": "skel_watchtower_2",
-			"type": "skeleton",
-			"name": "Highland Ford Warden",
-			"pos": Vector3(float(tw_x0) + 3.5, float(ford_y) + 1.5, tw_z),
-			"hp": 50 + hp_scale,
-			"max_hp": 50 + hp_scale,
-			"damage": 12 + dmg_scale,
-			"speed": 2.15 + spd_scale,
-			"attack_cd": 0.0,
-			"hit_flash": 0.0,
-			"state": "patrol",
-			"facing": 2,
-			"anim_t": 0.4
-		},
-		{
-			"id": "skel_priory_west",
-			"type": "skeleton",
-			"name": "Priory Crypt Sentinel",
-			"pos": Vector3(float(s_x0) + 6.5, 11.5, sanctum_z + 0.08),
-			"hp": 54 + hp_scale,
-			"max_hp": 54 + hp_scale,
-			"damage": 13 + dmg_scale,
-			"speed": 2.15 + spd_scale,
-			"attack_cd": 0.0,
-			"hit_flash": 0.0,
-			"state": "patrol",
-			"facing": 2,
-			"anim_t": 0.7
-		},
-		{
-			"id": "wraith_priory_east",
-			"type": "executioner",
-			"name": "Cabal Enforcer",
-			"pos": Vector3(float(s_x1) - 6.5, 11.5, sanctum_z + 0.08),
-			"hp": 75 + hp_scale,
-			"max_hp": 75 + hp_scale,
-			"damage": 15 + dmg_scale,
-			"speed": 2.2 + spd_scale,
-			"attack_cd": 0.0,
-			"cast_cd": 3.0,
-			"hit_flash": 0.0,
-			"state": "guard",
-			"facing": 3,
-			"anim_t": 1.9,
-			"boss": false
-		},
-		{
-			"id": "sanctum_warden",
-			"type": "executioner",
-			"name": "Tenebrae High Executioner",
-			"pos": Vector3(float(p_cx_int) + 0.5, 11.5, pent_z),
-			"hp": 90 + hp_scale * 2,
-			"max_hp": 90 + hp_scale * 2,
-			"damage": 16 + dmg_scale,
-			"speed": 2.25 + spd_scale,
-			"attack_cd": 0.0,
-			"cast_cd": 2.6,
-			"hit_flash": 0.0,
-			"state": "guard",
-			"facing": 2,
-			"anim_t": 0.0,
-			"boss": true
-		}
+	# 23 strategic spawn anchors across the 5 districts of the 72x72 outdoor world
+	var spawn_anchors: Array[Vector3] = [
+		# District 1: Outskirts Hamlet & Streets (5 enemies)
+		Vector3(float(road_x) + 1.5, 53.5, base_elev),
+		Vector3(float(road_x) + 7.5, 59.0, base_elev),
+		Vector3(float(road_x) - 5.5, 59.0, base_elev),
+		Vector3(float(h1_x0) + 3.0, 54.0, base_elev + 0.06),
+		Vector3(float(road_x) + 6.5, 63.0, base_elev + 0.06),
+		# District 2: Central Town Commons, Market & Guildhalls (6 enemies)
+		Vector3(float(mid_x) + 1.5, float(ave_y) + 3.5, base_elev),
+		Vector3(float(east_creek_x) - 4.5, float(ave_y) + 0.5, base_elev),
+		Vector3(float(mid_x) + 1.5, float(canal_y) + 7.5, base_elev),
+		Vector3(float(h4_x0) + 3.0, float(ave_y) - 4.5, base_elev + 0.08),
+		Vector3(float(h5_x0) + 3.0, float(ave_y) - 4.5, base_elev + 0.08),
+		Vector3(float(h5_x0) + 3.5, float(ave_y) + 6.0, base_elev + 0.08),
+		# District 3: Eastern River Gorge & Watchtower Highlands (5 enemies)
+		Vector3(keep_cx - 2.0, keep_cy + 1.0, tw_z + 0.08),
+		Vector3(float(tw_x0) + 3.5, float(ford_y) + 1.5, tw_z),
+		Vector3(float(tw_x0) + 2.5, float(ave_y) + 1.0, tw_z),
+		Vector3(keep_cx + 1.0, float(ford_y) + 3.5, tw_z + 0.08),
+		Vector3(float(tw_x0) + 8.0, float(ave_y) + 6.0, tw_z),
+		# District 5: Northern Priory Borough & Grand Pentagram Courtyard (7 enemies)
+		Vector3(float(s_x0) + 6.5, 11.5, sanctum_z + 0.08),
+		Vector3(float(s_x1) - 6.5, 11.5, sanctum_z + 0.08),
+		Vector3(float(s_x0) + 10.5, float(canal_y) - 4.0, sanctum_z),
+		Vector3(float(s_x1) - 10.5, float(canal_y) - 4.0, sanctum_z),
+		Vector3(float(p_x0) - 3.5, 11.5, sanctum_z),
+		Vector3(float(p_x1) + 3.5, 11.5, sanctum_z),
+		Vector3(float(p_cx_int) + 0.5, 11.5, pent_z) # 23rd anchor: Pentagram Warden (drops Blood Ritual Candle)
 	]
+
+	var raw_enemies: Array = []
+	for idx in range(ENEMY_CATALOG.size()):
+		var spec: Dictionary = ENEMY_CATALOG[idx]
+		var e_type: String = String(spec["type"])
+		var e_name: String = String(spec["name"])
+		var e_hp: int = int(spec["hp"]) + hp_scale + idx # Guaranteed strictly distinct HP per enemy!
+		var e_dmg: int = int(spec["damage"]) + dmg_scale
+		var e_spd: float = float(spec["speed"]) + spd_scale
+		var is_ranged: bool = bool(spec["ranged"])
+		var is_warden: bool = (idx >= ENEMY_CATALOG.size() - 2)
+		raw_enemies.append({
+			"id": "enemy_" + str(idx) + "_" + e_type,
+			"type": e_type,
+			"name": e_name,
+			"pos": spawn_anchors[idx],
+			"hp": e_hp,
+			"max_hp": e_hp,
+			"damage": e_dmg,
+			"speed": e_spd,
+			"attack_cd": 0.0,
+			"cast_cd": 2.6 + float(idx % 4) * 0.3,
+			"hit_flash": 0.0,
+			"state": "guard" if is_ranged else "patrol",
+			"facing": (idx * 3) % 8,
+			"anim_t": float(idx) * 0.37,
+			"boss": is_warden or is_ranged
+		})
 
 	var enemies: Array = []
 	for re in raw_enemies:
@@ -1041,12 +969,12 @@ static func _build_boss_level(rng: RandomNumberGenerator, level_num: int) -> Dic
 		},
 		{
 			"id": "boss_guard_l",
-			"type": "skeleton",
-			"name": "Tenebrae Honor Guard",
+			"type": "daemon",
+			"name": "Greater Daemon of Pyros",
 			"pos": Vector3(pent_cx - 4.5, 30.5, arena_z + 0.05),
-			"hp": 65,
-			"max_hp": 65,
-			"damage": 14,
+			"hp": 195,
+			"max_hp": 195,
+			"damage": 18,
 			"speed": 2.25,
 			"attack_cd": 0.0,
 			"hit_flash": 0.0,
@@ -1056,12 +984,12 @@ static func _build_boss_level(rng: RandomNumberGenerator, level_num: int) -> Dic
 		},
 		{
 			"id": "boss_guard_r",
-			"type": "skeleton",
-			"name": "Tenebrae Honor Guard",
+			"type": "gargoyle",
+			"name": "Winged Obsidian Gargoyle",
 			"pos": Vector3(pent_cx + 4.5, 30.5, arena_z + 0.05),
-			"hp": 65,
-			"max_hp": 65,
-			"damage": 14,
+			"hp": 148,
+			"max_hp": 148,
+			"damage": 16,
 			"speed": 2.25,
 			"attack_cd": 0.0,
 			"hit_flash": 0.0,
@@ -1071,12 +999,12 @@ static func _build_boss_level(rng: RandomNumberGenerator, level_num: int) -> Dic
 		},
 		{
 			"id": "boss_avenue_guard_1",
-			"type": "skeleton",
-			"name": "Royal Avenue Sentinel",
+			"type": "tempest_guard",
+			"name": "Mordea's Palace Guard",
 			"pos": Vector3(pent_cx - 1.5, 49.5, 1.4),
-			"hp": 55,
-			"max_hp": 55,
-			"damage": 12,
+			"hp": 108,
+			"max_hp": 108,
+			"damage": 14,
 			"speed": 2.15,
 			"attack_cd": 0.0,
 			"hit_flash": 0.0,
@@ -1086,13 +1014,13 @@ static func _build_boss_level(rng: RandomNumberGenerator, level_num: int) -> Dic
 		},
 		{
 			"id": "boss_avenue_guard_2",
-			"type": "skeleton",
-			"name": "Royal Avenue Sentinel",
+			"type": "hellhound",
+			"name": "Brimstone Hellhound",
 			"pos": Vector3(pent_cx + 1.5, 49.5, 1.4),
-			"hp": 55,
-			"max_hp": 55,
-			"damage": 12,
-			"speed": 2.15,
+			"hp": 162,
+			"max_hp": 162,
+			"damage": 15,
+			"speed": 2.35,
 			"attack_cd": 0.0,
 			"hit_flash": 0.0,
 			"state": "patrol",

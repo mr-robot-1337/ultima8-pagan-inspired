@@ -933,6 +933,8 @@ func _damage_enemy(enemy: Dictionary, dmg: int) -> void:
 	_spawn_burst(enemy["pos"] + Vector3(0, 0, 0.5), Color(0.95, 0.25, 0.15), 10)
 	if enemy["hp"] <= 0:
 		var ep: Vector3 = enemy["pos"]
+		var e_type: String = String(enemy["type"])
+		audio.play_enemy_death(e_type)
 		_say_bark(ep, String(enemy["name"]) + " vanquished!", Color(0.98, 0.82, 0.35), 2.5)
 		_spawn_burst(ep + Vector3(0, 0, 0.4), Color(0.95, 0.45, 0.15), 24)
 		if bool(enemy.get("final_boss", false)):
